@@ -1,6 +1,7 @@
 import std.stdio;
+import std.socket;
 
 void main()
 {
-	writeln("Edit source/app.d to start your project.");
+	writeln("This might be an irc server at some point");
 }
