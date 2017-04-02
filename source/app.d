@@ -1,16 +1,21 @@
 import std.stdio;
 import std.socket;
 
-void main()
-{
+void main() {
 	writeln("This might be an irc server at some point");
-	TcpSocket serverSocket = new TcpSocket();
-	serverSocket.bind(getAddress("0.0.0.0", 6667)[0]);
-	serverSocket.listen(1);
-	serverSocket.accept();
-	char[50] received;
+	string addr = "0.0.0.0";
+	ushort port = 6667;
+	TcpSocket connectionListener = new TcpSocket();
+	connectionListener.bind(new InternetAddress(addr, port));
+	connectionListener.listen(1);
+	char[512] buffer;
 	while(true) {
-		serverSocket.receive(received);
-		writeln(received);
+		try {
+			Socket server = connectionListener.accept();
+				auto num = server.receive(buffer);
+			writeln(buffer[0.. num]);
+		} catch {
+			writeln("there was an error :(");
+		}
 	}
 }
