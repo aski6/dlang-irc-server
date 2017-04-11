@@ -12,8 +12,11 @@ void main() {
 	while(true) {
 		try {
 			Socket server = connectionListener.accept();
+			while(server.isAlive()) {
 				auto num = server.receive(buffer);
-			writeln(buffer[0.. num]);
+				writeln(num);
+				write(buffer[0.. num]);
+			}
 		} catch {
 			writeln("there was an error :(");
 		}
