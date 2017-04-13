@@ -8,7 +8,28 @@ void main() {
 	listener.blocking = false;
 	listener.bind(new InternetAddress(ADDR, PORT));
 	listener.listen(1);
-	char[512] buffer;
+	writeln("Listening for incoming connections on address %s, port %d.", ADDR, PORT);
+
+	auto socketSet = new SocketSet(MAX_CONNECTIONS + 1); // +1 leaves room for the listener socket.
+	Socket[] connections;
+
+	while (true) {
+		socketSet.add(listener);
+
+		foreach (socket; connections) {
+			socketSet.add(socket);
+		}
+
+		Socket.select(socketSet, null, null);
+
+		for (int i = 0; i < connections.length; i++) { //for each socket
+			if(socketSet.isSet(connections[i])) { //if socket accessed by loop has changed state
+				char[512] buffer; //irc has a maximum message length of 512 chars, including CR-LF ending (2 chars)
+									
+			}
+		}
+	}
+	/*
 	while(true) {
 		try {
 			Socket server = listener.accept();
@@ -24,4 +45,5 @@ void main() {
 			writeln("there was an error :(");
 		}
 	}
+	*/
 }
