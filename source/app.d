@@ -2,6 +2,7 @@ import std.stdio;
 import std.socket;
 import config;
 import std.algorithm.mutation;
+import client;
 
 void main() {
 	writefln("This might be an irc server at some point");
@@ -14,34 +15,34 @@ void main() {
 	writefln("");
 
 	auto socketSet = new SocketSet(MAX_CONNECTIONS + 1); // +1 leaves room for the listener socket.
-	Socket[] connections;
+	Client[] clients;
 
 	while (true) {
 		socketSet.add(listener);
 
-		foreach (connection; connections) {
-			socketSet.add(connection); //add all connections to socketSet to be checked for status chages.
+		foreach (client; clients) {
+			socketSet.add(client.conn); //add all connections to socketSet to be checked for status chages.
 		}
 
 		Socket.select(socketSet, null, null);  //get list of sockets that have changed status.
 
-		for (size_t i = 0; i < connections.length; i++) {
-			if (socketSet.isSet(connections[i])) { //if socket being checked has a status update.
+		for (size_t i = 0; i < clients.length; i++) {
+			if (socketSet.isSet(clients[i].conn)) { //if socket being checked has a status update.
 				char[512] buffer; //irc has a maximum message length of 512 chars, including CR-LF ending (2 chars).
-				auto recLen = connections[i].receive(buffer); //recLen stores the length of the data received into the buffer.
+				auto recLen = clients[i].conn.receive(buffer); //recLen stores the length of the data received into the buffer.
 				if (recLen == Socket.ERROR) {
 					writefln("There was an error receiving from the socket. :(");
 				} else if (recLen != 0) {
-					writefln("Received %d bytes from %s: %s", recLen, connections[i].remoteAddress().toString(), buffer[0.. recLen]);
+					writefln("Received %d bytes from %s: %s", recLen, clients[i].conn.remoteAddress().toString(), buffer[0.. recLen]);
 				} else {
 					try {
 						//try to state address of socket closing, may fail if connections[i] was closed due to an error.
-						writefln("Connection from %s closed.", connections[i].remoteAddress().toString());
+						writefln("Connection from %s closed.", clients[i].conn.remoteAddress().toString());
 					} catch (SocketException) {
 						writefln("Connection closed.");
 					}
-					connections[i].close();
-					connections = connections.remove(i);
+					clients[i].conn.close();
+					clients = clients.remove(i);
 					i--;
 				}
 			}
@@ -57,9 +58,9 @@ void main() {
 			sn = listener.accept();
 			assert(sn.isAlive);
 			assert(listener.isAlive);
-			if (connections.length < MAX_CONNECTIONS) {
+			if (clients.length < MAX_CONNECTIONS) {
 				writefln("Connection from %s established.", sn.remoteAddress().toString());
-				connections ~= sn;
+				clients ~= new Client(sn);
 			} else {
 				writefln("Rejected connection from %s: max connections already reached.", sn.remoteAddress().toString());
 				sn.close();
