@@ -3,6 +3,7 @@ import std.socket;
 import config;
 import std.algorithm.mutation;
 import client;
+import message;
 
 void main() {
 	writefln("This might be an irc server at some point");
@@ -13,19 +14,15 @@ void main() {
 	listener.listen(1);
 	writefln("Listening for incoming connections on address %s, port %d.", ADDR, PORT);
 	writefln("");
-
 	auto socketSet = new SocketSet(MAX_CONNECTIONS + 1); // +1 leaves room for the listener socket.
 	Client[] clients;
-
+	Message[] messsages;
 	while (true) {
 		socketSet.add(listener);
-
 		foreach (client; clients) {
 			socketSet.add(client.conn); //add all connections to socketSet to be checked for status chages.
 		}
-
 		Socket.select(socketSet, null, null);  //get list of sockets that have changed status.
-
 		for (size_t i = 0; i < clients.length; i++) {
 			if (socketSet.isSet(clients[i].conn)) { //if socket being checked has a status update.
 				char[512] buffer; //irc has a maximum message length of 512 chars, including CR-LF ending (2 chars).
@@ -34,6 +31,7 @@ void main() {
 					writefln("There was an error receiving from the socket. :(");
 				} else if (recLen != 0) {
 					writefln("Received %d bytes from %s: %s", recLen, clients[i].conn.remoteAddress().toString(), buffer[0.. recLen]);
+					messages ~= new Message(clients[i].conn, buffer);
 				} else {
 					try {
 						//try to state address of socket closing, may fail if connections[i] was closed due to an error.
@@ -67,24 +65,13 @@ void main() {
 				assert(!sn.isAlive);
 				assert(listener.isAlive);
 			}
+		} else { //if not the listener, loop through each message and send if not from the current connection.
+			foreach (msg; messages) {
+				if(msg.origin != clients[i].conn) {
+					clients[i].conn.send(msg.contents);
+				}
+			}
 		}
 		socketSet.reset();
 	}
-	/*
-	while(true) {
-		try {
-			Socket server = listener.accept();
-			while(server.isAlive()) {
-				auto num = server.receive(buffer);
-				if(num == 0) { //check that some data has actually been received, if not, our nc socket(used for testing receiving of data from socket) is not active, so start wait for another connection.
-					break;
-				}
-				//writefln(num);
-				write(buffer[0.. num]);
-			}
-		} catch {
-			writefln("there was an error :(");
-		}
-	}
-	*/
 }
