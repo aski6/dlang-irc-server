@@ -23,7 +23,7 @@ void main() {
 			socketSet.add(client.conn); //add all connections to socketSet to be checked for status chages.
 		}
 		Socket.select(socketSet, null, null);  //get list of sockets that have changed status.
-		for (size_t i = 0; i < clients.length; i++) {
+		for (size_t i = 0; i < clients.length; i++) { //loop through each socket with a status change to receive all new messages.
 			if (socketSet.isSet(clients[i].conn)) { //if socket being checked has a status update.
 				char[512] buffer; //irc has a maximum message length of 512 chars, including CR-LF ending (2 chars).
 				auto recLen = clients[i].conn.receive(buffer); //recLen stores the length of the data received into the buffer.
@@ -44,14 +44,15 @@ void main() {
 					i--;
 				}
 			}
-			if (clients[i] != listener) { //if not the listener, loop through each message and send if not from the current connection.
-				foreach (msg; messages) {
-					if(msg.origin != clients[i].conn) {
-						clients[i].conn.send(msg.contents[0.. msg.length]);
-					}
+		}
+		foreach (client; clients) { //loop through each client, sending all messages that did not originate from it, then clear the message list.
+			foreach (msg; messages) {
+				if(msg.origin != client.conn) {
+					client.conn.send(msg.contents[0.. msg.length]);
 				}
 			}
 		}
+		messages = [];
 		if (socketSet.isSet(listener)) { //if there was a connection request.
 			Socket sn = null;
 			scope (failure) {
