@@ -16,7 +16,7 @@ void main() {
 	writefln("");
 	auto socketSet = new SocketSet(MAX_CONNECTIONS + 1); // +1 leaves room for the listener socket.
 	Client[] clients;
-	Message[] messsages;
+	Message[] messages;
 	while (true) {
 		socketSet.add(listener);
 		foreach (client; clients) {
@@ -31,7 +31,7 @@ void main() {
 					writefln("There was an error receiving from the socket. :(");
 				} else if (recLen != 0) {
 					writefln("Received %d bytes from %s: %s", recLen, clients[i].conn.remoteAddress().toString(), buffer[0.. recLen]);
-					messages ~= new Message(clients[i].conn, buffer);
+					messages ~= new Message(clients[i].conn, buffer, recLen);
 				} else {
 					try {
 						//try to state address of socket closing, may fail if connections[i] was closed due to an error.
@@ -42,6 +42,13 @@ void main() {
 					clients[i].conn.close();
 					clients = clients.remove(i);
 					i--;
+				}
+			}
+			if (clients[i] != listener) { //if not the listener, loop through each message and send if not from the current connection.
+				foreach (msg; messages) {
+					if(msg.origin != clients[i].conn) {
+						clients[i].conn.send(msg.contents[0.. msg.length]);
+					}
 				}
 			}
 		}
@@ -58,18 +65,13 @@ void main() {
 			assert(listener.isAlive);
 			if (clients.length < MAX_CONNECTIONS) {
 				writefln("Connection from %s established.", sn.remoteAddress().toString());
+				sn.send("Connection accepted.");
 				clients ~= new Client(sn);
 			} else {
 				writefln("Rejected connection from %s: max connections already reached.", sn.remoteAddress().toString());
 				sn.close();
 				assert(!sn.isAlive);
 				assert(listener.isAlive);
-			}
-		} else { //if not the listener, loop through each message and send if not from the current connection.
-			foreach (msg; messages) {
-				if(msg.origin != clients[i].conn) {
-					clients[i].conn.send(msg.contents);
-				}
 			}
 		}
 		socketSet.reset();

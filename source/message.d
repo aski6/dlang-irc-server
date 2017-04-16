@@ -4,8 +4,10 @@ import std.socket;
 class Message {
   Socket origin;
   char[] contents;
-  this (Socket from, string message) {
+  long length;
+  this (Socket from, char[] message, long len) {
     origin = from;
     contents = message;
+    length = len;
   }
 }
