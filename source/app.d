@@ -70,21 +70,4 @@ void main() {
 		}
 		socketSet.reset();
 	}
-	/*
-	while(true) {
-		try {
-			Socket server = listener.accept();
-			while(server.isAlive()) {
-				auto num = server.receive(buffer);
-				if(num == 0) { //check that some data has actually been received, if not, our nc socket(used for testing receiving of data from socket) is not active, so start wait for another connection.
-					break;
-				}
-				//writefln(num);
-				write(buffer[0.. num]);
-			}
-		} catch {
-			writefln("there was an error :(");
-		}
-	}
-	*/
 }
