@@ -1,9 +1,9 @@
 import std.stdio;
 import std.socket;
-import config;
 import std.algorithm.mutation;
+import std.conv;
+import config;
 import client;
-import nick;
 
 void main() {
 	writefln("This might be an irc server at some point");
@@ -16,17 +16,13 @@ void main() {
 	writefln("");
 
 	auto socketSet = new SocketSet(MAX_CONNECTIONS + 1); // +1 leaves room for the listener socket.
-	Client[] clients;
 
 	while (true) {
 		socketSet.add(listener);
-
 		foreach (client; clients) {
 			socketSet.add(client.conn); //add all connections to socketSet to be checked for status chages.
 		}
-
 		Socket.select(socketSet, null, null);  //get list of sockets that have changed status.
-
 		for (size_t i = 0; i < clients.length; i++) {
 			if (socketSet.isSet(clients[i].conn)) { //if socket being checked has a status update.
 				char[512] buffer; //irc has a maximum message length of 512 chars, including CR-LF ending (2 chars).
@@ -34,7 +30,7 @@ void main() {
 				if (recLen == Socket.ERROR) {
 					writefln("There was an error receiving from the socket. :(");
 				} else if (recLen != 0) {
-					writefln("Received %d bytes from %s: %s", recLen, clients[i].conn.remoteAddress().toString(), buffer[0.. recLen]);
+					processReceived(buffer, recLen, i);
 				} else {
 					try {
 						//try to state address of socket closing, may fail if connections[i] was closed due to an error.
@@ -61,7 +57,7 @@ void main() {
 			assert(listener.isAlive);
 			if (clients.length < MAX_CONNECTIONS) {
 				writefln("Connection from %s established.", sn.remoteAddress().toString());
-				clients ~= new Client(sn);
+				clients ~= new Client(sn, ("Guest"~to!string(clients.length)));
 			} else {
 				writefln("Rejected connection from %s: max connections already reached.", sn.remoteAddress().toString());
 				sn.close();
@@ -70,5 +66,19 @@ void main() {
 			}
 		}
 		socketSet.reset();
+	}
+}
+
+void processReceived(char[512] buffer, long recLen, size_t index) {
+	writefln("Received %d bytes from %s: %s", recLen, clients[index].conn.remoteAddress().toString(), buffer[0.. recLen]);
+	if(buffer[0] == ':') { //if there is no prefix
+		if(buffer[0.. 3] == "NICK") { //should probably just split by space character, but specific positions should do for now.
+			string reqNick = to!string(buffer[4..(recLen-1)]);
+			if (clients[index].setNick(reqNick) == 1) {
+
+			} else {
+
+			}
+		}
 	}
 }
