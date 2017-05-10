@@ -3,6 +3,7 @@ import std.socket;
 import config;
 import std.algorithm.mutation;
 import client;
+import nick;
 
 void main() {
 	writefln("This might be an irc server at some point");

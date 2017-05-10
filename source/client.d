@@ -1,6 +1,8 @@
 import std.stdio;
 import std.socket;
 
+int[string] nicks;
+
 class Client {
   Socket conn;
   string nick;
