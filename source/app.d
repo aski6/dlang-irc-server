@@ -14,9 +14,7 @@ void main() {
 	listener.listen(1);
 	writefln("Listening for incoming connections on address %s, port %d.", ADDR, PORT);
 	writefln("");
-
 	auto socketSet = new SocketSet(MAX_CONNECTIONS + 1); // +1 leaves room for the listener socket.
-
 	while (true) {
 		socketSet.add(listener);
 		foreach (client; clients) {
@@ -68,7 +66,6 @@ void main() {
 		socketSet.reset();
 	}
 }
-
 void processReceived(char[512] buffer, long recLen, size_t index) {
 	writefln("Received %d bytes from %s: %s", recLen, clients[index].conn.remoteAddress().toString(), buffer[0.. recLen]);
 	if(buffer[0] == ':') { //if there is no prefix

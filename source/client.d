@@ -39,8 +39,8 @@ class Nick {
 }
 
 
-//functions used to interact with clients
 
+//functions used to interact with clients
 int getNickStatus(string checkNick) {
   Nick* check;
   check = (checkNick in nicks);
