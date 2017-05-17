@@ -2,6 +2,7 @@ import std.stdio;
 import std.socket;
 import std.algorithm.mutation;
 import std.conv;
+import std.array;
 import config;
 import client;
 
@@ -68,14 +69,27 @@ void main() {
 }
 void processReceived(char[512] buffer, long recLen, size_t index) {
 	writefln("Received %d bytes from %s: %s", recLen, clients[index].conn.remoteAddress().toString(), buffer[0.. recLen]);
-	if(buffer[0] == ':') { //if there is no prefix
-		if(buffer[0.. 3] == "NICK") { //should probably just split by space character, but specific positions should do for now.
-			string reqNick = to!string(buffer[4..(recLen-1)]);
+	string[] message = split(to!string(buffer[0.. recLen]), " ");
+	writeln(message); //use this to debug the split message.
+	char[] reply;
+	if(buffer[0] != ':') { //if there is no prefix
+		if(message[0] == "NICK") { //should probably just split by space character, but specific positions should do for now.
+			string reqNick = to!string(message[1]);
 			if (clients[index].setNick(reqNick) == 1) {
 
 			} else {
 
 			}
+		} else if (message[0] == "USER") {
+			if(message.length < 4) {
+				string realname = message[4.. message.length].join();
+				clients[index].setup(message[1], message[2], message[3], realname);
+			} else {
+				reply ~= to!char(461);
+			}
 		}
+	}
+	if(reply.length) {
+		clients[index].conn.send(reply);
 	}
 }

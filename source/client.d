@@ -7,13 +7,24 @@ Nick[string] nicks;
 class Client {
   Socket conn;
   string nick;
+  string username;
+  string hostname;
+  string servername;
+  string realname;
+  bool active = false;
   this(Socket connection, string nickname) {
     conn = connection;
     setNick(nickname);
   }
+  void setup(string user, string host, string serv, string id) {
+    username = user;
+    hostname = host;
+    servername = serv;
+    realname = id;
+    active = true;
+  }
   int setNick(string newNick) { //returns 0 for success, 1 for failure. handling for reserved to be done later.
-    int stat = getNickStatus(newNick);
-    if(stat == 0) {
+    if(getNickStatus(newNick) == 0) {
       nick = newNick;
       nicks[nick].take();
       return 0;
@@ -34,7 +45,7 @@ class Nick {
     status = 0;
   }
   void take() {
-
+    status = 1;
   }
 }
 
