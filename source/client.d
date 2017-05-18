@@ -37,11 +37,13 @@ class Client {
 
 class Nick {
   int status; //0: available, 1: in-use, 2: reserved?
-  this(int initStatus) {
+  string contents;
+  this(int initStatus, string name) {
     status = initStatus;
+    contents=name;
   }
   void release() {
-    //change when adding nickname registration
+    //change when adding nickname registration to change to reserved if that was its status before use, and if not, remove from array. use nicks.remove(contents); to do so.
     status = 0;
   }
   void take() {
@@ -54,7 +56,7 @@ int getNickStatus(string checkNick) {
   Nick* check;
   check = (checkNick in nicks);
   if (check == null) { //if nick is not in use or registered
-    nicks[checkNick] = new Nick(0);
+    nicks[checkNick] = new Nick(0, checkNick);
     return 0;
   } else {
     return nicks[checkNick].status;

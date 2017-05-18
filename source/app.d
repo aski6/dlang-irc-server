@@ -69,27 +69,34 @@ void main() {
 }
 void processReceived(char[512] buffer, long recLen, size_t index) {
 	writefln("Received %d bytes from %s: %s", recLen, clients[index].conn.remoteAddress().toString(), buffer[0.. recLen]);
-	string[] message = split(to!string(buffer[0.. recLen]), " ");
-	writeln(message); //use this to debug the split message.
-	char[] reply;
-	if(buffer[0] != ':') { //if there is no prefix
-		if(message[0] == "NICK") { //should probably just split by space character, but specific positions should do for now.
-			string reqNick = to!string(message[1]);
-			if (clients[index].setNick(reqNick) == 1) {
+	if (buffer[recLen-1] == '\n') {
+		string[] messages = split(to!string(buffer[0.. recLen]), '\n');//first remove the newline char from the message; a check is done above since it is required, and removing it makes operating on the message easier.
+		for (int i=0; i < messages.length-1; i++) {
+			char[] reply;
+			string[] message = split(messages[i], " "); //split the message portion without the newline
+			//writeln(message); //use these to debug the split message.
+			//writeln(message.length);
+			if(buffer[0] != ':') { //if there is no prefix
+				if(message[0] == "NICK") {
+					string reqNick = message[1];
+					if (clients[index].setNick(reqNick) != 0) { //if nick command is sucess.
+						reply ~= "433";
+					} else {
 
-			} else {
-
+					}
+				} else if (message[0] == "USER") {
+					if(message.length >= 4) {
+						string realname = message[4.. message.length-1].join();
+						clients[index].setup(message[1], message[2], message[3], realname);
+						writeln("completed user command");
+					} else {
+						reply ~= "461";
+					}
+				}
 			}
-		} else if (message[0] == "USER") {
-			if(message.length < 4) {
-				string realname = message[4.. message.length].join();
-				clients[index].setup(message[1], message[2], message[3], realname);
-			} else {
-				reply ~= to!char(461);
+			if(reply.length) {
+				clients[index].conn.send(reply);
 			}
 		}
-	}
-	if(reply.length) {
-		clients[index].conn.send(reply);
 	}
 }
