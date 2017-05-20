@@ -33,6 +33,9 @@ class Client {
       return 1;
     }
   }
+  void leave() {
+    nicks[nick].release();
+  }
 }
 
 class Nick {

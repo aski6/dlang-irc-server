@@ -79,16 +79,17 @@ void processReceived(char[512] buffer, long recLen, size_t index) {
 			if(buffer[0] != ':') { //if there is no prefix
 				if(message[0] == "NICK") {
 					string reqNick = message[1];
-					if (clients[index].setNick(reqNick) != 0) { //if nick command is sucess.
-						reply ~= "433";
-					} else {
+					writefln("requested nick: %s", message[1]);
+					if (clients[index].setNick(reqNick) == 0) { //if nick command is sucess.
 
+					} else {
+						reply ~= "433";
 					}
 				} else if (message[0] == "USER") {
 					if(message.length >= 4) {
 						string realname = message[4.. message.length-1].join();
 						clients[index].setup(message[1], message[2], message[3], realname);
-						writeln("completed user command");
+						reply ~= "001";
 					} else {
 						reply ~= "461";
 					}
