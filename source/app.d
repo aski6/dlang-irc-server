@@ -105,6 +105,8 @@ void processReceived(char[512] buffer, long recLen, size_t index) {
 					} else {
 						reply ~= "461";
 					}
+				} else if (message[0] == "CAP") {
+					reply ~= "421";
 				}
 			}
 			if(reply.length) {
