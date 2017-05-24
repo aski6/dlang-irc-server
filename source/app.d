@@ -81,7 +81,7 @@ void processReceived(char[512] buffer, long recLen, size_t index) {
 					string reqNick = message[1];
 					writefln("requested nick: %s", message[1]);
 					if (clients[index].setNick(reqNick) == 0) { //if nick command is sucess.
-
+						writefln("Nick Set: %s", clients[index].nick);
 					} else {
 						reply ~= "433";
 					}
@@ -89,7 +89,19 @@ void processReceived(char[512] buffer, long recLen, size_t index) {
 					if(message.length >= 4) {
 						string realname = message[4.. message.length-1].join();
 						clients[index].setup(message[1], message[2], message[3], realname);
-						reply ~= "001";
+						//reply ~= ":";
+						//reply ~= clients[i].server;
+						reply ~= "001 ";
+						reply ~= clients[index].nick;
+						reply = reply[0.. reply.length-1];
+						reply ~= " :Welcome to the Internet Relay Network ";
+						reply ~= clients[index].nick;
+						reply = reply[0.. reply.length-1];
+						reply ~= "!";
+						reply ~= clients[index].user;
+						reply ~= "@";
+						reply ~= clients[index].host;
+						writefln("nick = %s", clients[index].nick);
 					} else {
 						reply ~= "461";
 					}

@@ -7,20 +7,20 @@ Nick[string] nicks;
 class Client {
   Socket conn;
   string nick;
-  string username;
-  string hostname;
-  string servername;
-  string realname;
+  string user;
+  string host;
+  string server;
+  string name;
   bool active = false;
   this(Socket connection, string nickname) {
     conn = connection;
     setNick(nickname);
   }
-  void setup(string user, string host, string serv, string id) {
-    username = user;
-    hostname = host;
-    servername = serv;
-    realname = id;
+  void setup(string username, string hostname, string servername, string realname) {
+    user = username;
+    host = hostname;
+    server = servername;
+    name = realname;
     active = true;
   }
   int setNick(string newNick) { //returns 0 for success, 1 for failure. handling for reserved to be done later.
