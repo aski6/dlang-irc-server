@@ -11,6 +11,7 @@ class Client {
   string host;
   string server;
   string name;
+  string[] queue;
   bool active = false;
   this(Socket connection, string nickname) {
     conn = connection;

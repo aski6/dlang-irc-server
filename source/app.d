@@ -3,6 +3,7 @@ import std.socket;
 import std.algorithm.mutation;
 import std.conv;
 import std.array;
+import std.format;
 import config;
 import client;
 
@@ -19,6 +20,11 @@ void main() {
 	while (true) {
 		socketSet.add(listener);
 		foreach (client; clients) {
+			//send all messages in the client's message queue to the client.
+			foreach (message; client.queue) {
+				client.conn.send(message);
+			}
+			client.queue = [];
 			socketSet.add(client.conn); //add all connections to socketSet to be checked for status chages.
 		}
 		Socket.select(socketSet, null, null);  //get list of sockets that have changed status.
@@ -83,7 +89,7 @@ void processReceived(char[512] buffer, long recLen, size_t index) {
 					if (clients[index].setNick(reqNick) == 0) { //if nick command is sucess.
 						writefln("Nick Set: %s", clients[index].nick);
 					} else {
-						reply ~= "433";
+						reply ~= "433\n";
 					}
 				} else if (message[0] == "USER") {
 					if(message.length >= 4) {
@@ -101,16 +107,18 @@ void processReceived(char[512] buffer, long recLen, size_t index) {
 						reply ~= clients[index].user;
 						reply ~= "@";
 						reply ~= clients[index].host;
+						reply ~= "\n";
 						writefln("nick = %s", clients[index].nick);
+						clients[index].queue ~= format("002 %s :Your host is %s\n", clients[index].nick, clients[index].server);
 					} else {
-						reply ~= "461";
+						reply ~= "461\n";
 					}
 				} else if (message[0] == "CAP") {
-					reply ~= "421";
+					reply ~= "421\n";
 				}
 			}
 			if(reply.length) {
-				clients[index].conn.send(reply);
+				writefln("sent %d bytes", clients[index].conn.send(reply));
 			}
 		}
 	}
