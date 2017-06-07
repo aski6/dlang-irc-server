@@ -77,8 +77,7 @@ void processReceived(char[512] buffer, long recLen, size_t index) {
 	writefln("Received %d bytes from %s: %s", recLen, clients[index].conn.remoteAddress().toString(), buffer[0.. recLen]);
 	if (buffer[recLen-1] == '\n') {
 		string[] messages = split(to!string(buffer[0.. recLen]), '\n');//first remove the newline char from the message; a check is done above since it is required, and removing it makes operating on the message easier.
-		for (int i=0; i < messages.length-1; i++) {
-			char[] reply;
+		for (int i=0; i < messages.length; i++) {
 			string[] message = split(messages[i], " "); //split the message portion without the newline
 			//writeln(message); //use these to debug the split message.
 			//writeln(message.length);
@@ -89,15 +88,14 @@ void processReceived(char[512] buffer, long recLen, size_t index) {
 					if (clients[index].setNick(reqNick) == 0) { //if nick command is sucess.
 						writefln("Nick Set: %s", clients[index].nick);
 					} else {
-						reply ~= "433\n";
+						clients[index].queue ~= "433\n";
 					}
 				} else if (message[0] == "USER") {
 					if(message.length >= 4) {
 						string realname = message[4.. message.length-1].join();
 						clients[index].setup(message[1], message[2], message[3], realname);
-						//reply ~= ":";
-						//reply ~= clients[i].server;
-						reply ~= "001 ";
+						clients[index].queue ~= format("001 %s :Welcome to the Internet Relay Network %s!%s@%s\n", clients[index].nick, clients[index].nick, clients[index].user, clients[index].host);
+						/*reply ~= "001 ";
 						reply ~= clients[index].nick;
 						reply = reply[0.. reply.length-1];
 						reply ~= " :Welcome to the Internet Relay Network ";
@@ -109,16 +107,14 @@ void processReceived(char[512] buffer, long recLen, size_t index) {
 						reply ~= clients[index].host;
 						reply ~= "\n";
 						writefln("nick = %s", clients[index].nick);
+						*/
 						clients[index].queue ~= format("002 %s :Your host is %s\n", clients[index].nick, clients[index].server);
 					} else {
-						reply ~= "461\n";
+						clients[index].queue ~= "461\n";
 					}
 				} else if (message[0] == "CAP") {
-					reply ~= "421\n";
+					clients[index].queue ~= "421\n";
 				}
-			}
-			if(reply.length) {
-				writefln("sent %d bytes", clients[index].conn.send(reply));
 			}
 		}
 	}
