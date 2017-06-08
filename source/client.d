@@ -12,7 +12,7 @@ class Client {
   string server;
   string name;
   string[] queue;
-  int[string] channels;
+  string[] channels;
   bool active = false;
   this(Socket connection, string nickname) {
     conn = connection;

@@ -7,6 +7,7 @@ import std.format;
 import std.string;
 import config;
 import client;
+import channel;
 
 void main() {
 	writefln("This might be an irc server at some point");
@@ -21,6 +22,12 @@ void main() {
 	while (true) {
 		socketSet.add(listener);
 		foreach (client; clients) {
+			//go through each channel the client is part of then copy the channel message queue to the client
+			foreach (channel; client.channels) {
+				foreach (message; channels[channel].queue) {
+					client.queue ~= message;
+				}
+			}
 			//send all messages in the client's message queue to the client.
 			foreach (message; client.queue) {
 				client.conn.send(message);
@@ -101,7 +108,13 @@ void processReceived(char[512] buffer, long recLen, size_t index) {
 							clients[index].queue ~= "461\n";
 						}
 					} else if (message[0] == "JOIN") {
-						
+						if (checkChannelExistance(message[1])) {
+							clients[index].channels ~= message[1];
+						} else {
+							channels[message[1]] = new Channel(message[1]);
+							clients[index].channels ~= message[1];
+						}
+						writefln("Joined Channel: %s", message[1]);
 					} else if (message[0] == "CAP") {
 						clients[index].queue ~= "421\n";
 					}
