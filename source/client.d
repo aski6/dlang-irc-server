@@ -12,6 +12,7 @@ class Client {
   string server;
   string name;
   string[] queue;
+  int[string] channels;
   bool active = false;
   this(Socket connection, string nickname) {
     conn = connection;
@@ -33,6 +34,12 @@ class Client {
       //change this when adding nickname registration
       return 1;
     }
+  }
+  void joinChannel(string channel) {
+
+  }
+  void leaveChannel(string channel) {
+
   }
   void leave() {
     nicks[nick].release();

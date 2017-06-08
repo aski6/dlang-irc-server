@@ -77,13 +77,11 @@ void main() {
 void processReceived(char[512] buffer, long recLen, size_t index) {
 	writefln("Received %d bytes from %s: %s", recLen, clients[index].conn.remoteAddress().toString(), buffer[0.. recLen]);
 	if (buffer[recLen-1] == '\n') {
-		string[] messages = split(to!string(buffer[0.. recLen]), '\n');//first remove the newline char from the message; a check is done above since it is required, and removing it makes operating on the message easier.
+		string[] messages = split(to!string(buffer[0.. recLen]), '\n');//first split message by the newline char from the message; a check is done above since it is required, and seperating it makes operating each message easier.
 		for (int i=0; i < messages.length; i++) {
-			messages[i] = removechars(messages[i], "\r");
+			messages[i] = removechars(messages[i], "\r"); //Since irc uses windows-style line endings to show the total end of message, remove the extra character since it is not needed for processing the message.
 			if(messages[i].length > 0) {
-				string[] message = split(messages[i], " "); //split the message portion without the newline
-				//writeln(message); //use these to debug the split message.
-				//writeln(message.length);
+				string[] message = split(messages[i], " "); //split the message into individual args
 				if(buffer[0] != ':') { //if there is no prefix
 					if(message[0] == "NICK") {
 						string reqNick = message[1];
@@ -102,6 +100,8 @@ void processReceived(char[512] buffer, long recLen, size_t index) {
 						} else {
 							clients[index].queue ~= "461\n";
 						}
+					} else if (message[0] == "JOIN") {
+						
 					} else if (message[0] == "CAP") {
 						clients[index].queue ~= "421\n";
 					}
