@@ -107,13 +107,11 @@ void processReceived(char[512] buffer, long recLen, size_t index) {
 						} else {
 							clients[index].queue ~= "461\n";
 						}
-					} else if (message[0] == "JOIN") {
-						if (checkChannelExistance(message[1])) {
-							clients[index].channels ~= message[1];
-						} else {
+					} else if (message[0] == "JOIN") {clients[index].channels ~= message[1];
+						if (!checkChannelExistance(message[1])) {
 							channels[message[1]] = new Channel(message[1]);
-							clients[index].channels ~= message[1];
 						}
+						clients[index].channels ~= message[1];
 						writefln("Joined Channel: %s", message[1]);
 					} else if (message[0] == "CAP") {
 						clients[index].queue ~= "421\n";

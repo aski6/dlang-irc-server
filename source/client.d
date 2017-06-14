@@ -27,6 +27,7 @@ class Client {
   }
   int setNick(string newNick) { //returns 0 for success, 1 for failure. handling for reserved to be done later.
     if(getNickStatus(newNick) == 0) {
+      nicks[nick].release();
       nick = newNick;
       nicks[nick].take();
       return 0;
@@ -34,12 +35,6 @@ class Client {
       //change this when adding nickname registration
       return 1;
     }
-  }
-  void joinChannel(string channel) {
-
-  }
-  void leaveChannel(string channel) {
-
   }
   void leave() {
     nicks[nick].release();
