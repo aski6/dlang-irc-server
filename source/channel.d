@@ -1,18 +1,10 @@
 import client;
-Channel[string] channels;
 
 class Channel {
 	string id;
 	string[] queue;
 	this(string name) {
 		id = name;
-	}
-}
-
-class Message {
-	string data;
-	this(string contents) {
-		data = contents;
 	}
 }
 

@@ -5,15 +5,21 @@ import std.conv;
 import std.array;
 import std.format;
 import std.string;
+
 import config;
 import client;
 import channel;
 
+Channel[string] channels;
+Client[] clients;
+
 void main() {
 	writefln("This might be an irc server at some point");
-	auto listener = new TcpSocket();
-	assert(listener.isAlive);
-	listener.blocking = false;
+
+	//Receive data from sockets and setup incoming connections.
+	auto listener = new TcpSocket(); //Create a socket to listen for incoming connection requests.
+	assert(listener.isAlive); //listener must have the isAlive property true.
+	listener.blocking = false; //Make listener non-blocking since the program is not multi-threaded, and we want to do things while waiting for sockets to do stuff.
 	listener.bind(new InternetAddress(ADDR, PORT));
 	listener.listen(1);
 	writefln("Listening for incoming connections on address %s, port %d.", ADDR, PORT);
