@@ -13,17 +13,15 @@ class Client {
   string name;
   string[] queue;
   string[] channels;
-  bool active = false;
-  this(Socket connection, string nickname) {
+  this(Socket connection, string nickname, string username, string hostname, string servername, string realname) {
+    name = username;
+    host = hostname;
+    server = servername;
+    name = realname; {
     conn = connection;
     setNick(nickname);
   }
-  void setup(string username, string hostname, string servername, string realname) {
-    user = username;
-    host = hostname;
-    server = servername;
-    name = realname;
-    active = true;
+  void setup(
   }
   int setNick(string newNick) { //returns 0 for success, 1 for failure. handling for reserved to be done later.
     if(getNickStatus(newNick) == 0) {

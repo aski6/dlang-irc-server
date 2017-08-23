@@ -22,11 +22,15 @@ void main() {
 	listener.blocking = false; //Make listener non-blocking since the program is not multi-threaded, and we want to do things while waiting for sockets to do stuff.
 	listener.bind(new InternetAddress(ADDR, PORT));
 	listener.listen(1);
-	writefln("Listening for incoming connections on address %s, port %d.", ADDR, PORT);
-	writefln("");
-	auto socketSet = new SocketSet(MAX_CONNECTIONS + 1); // +1 leaves room for the listener socket.
+
+	//start the program loop checking sockets.
+	writefln("Listening for incoming connections on address %s, port %d.\n", ADDR, PORT);
+
+	auto socketSet = new SocketSet(MAX_CONNECTIONS + 1); //create a socketset with enough slots for the mac number of connections. +1 leaves room for the listener socket. The socketset allows us to keep track of which sockets have updates that need processing
 	while (true) {
-		socketSet.add(listener);
+
+		socketSet.add(listener);//Add the listener socket to the socket set so that we can process any updates from it.
+
 		foreach (client; clients) {
 			//go through each channel the client is part of then copy the channel message queue to the client
 			foreach (channel; client.channels) {
@@ -34,10 +38,11 @@ void main() {
 					client.queue ~= message;
 				}
 			}
-			//send all messages in the client's message queue to the client.
+			//then send all messages in the client's message queue to the client.
 			foreach (message; client.queue) {
 				client.conn.send(message);
 			}
+			//clear the client's message queue.
 			client.queue = [];
 			socketSet.add(client.conn); //add all connections to socketSet to be checked for status chages.
 		}
@@ -65,7 +70,7 @@ void main() {
 		}
 		if (socketSet.isSet(listener)) { //if there was a connection request.
 			Socket sn = null;
-			scope (failure) {
+			scope (failure) { //if client creation fails, run this.
 				writefln("Error accepting connection");
 				if (sn) {
 					sn.close();
