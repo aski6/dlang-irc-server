@@ -14,24 +14,21 @@ class Client {
   string[] queue;
   string[] channels;
   this(Socket connection, string nickname, string username, string hostname, string servername, string realname) {
-    name = username;
-    host = hostname;
-    server = servername;
-    name = realname; {
-    conn = connection;
-    setNick(nickname);
+	user = username;
+	host = hostname;
+	server = servername;
+	name = realname; 
+	conn = connection;
+	setNick(nickname);
   }
-  void setup(
-  }
-  int setNick(string newNick) { //returns 0 for success, 1 for failure. handling for reserved to be done later.
-    if(getNickStatus(newNick) == 0) {
+  bool setNick(string newNick) { //Try to set the clients nickname to the supplied argument. Return a the status of setting the new nick.
+    if(!nickInUse(newNick)) {
       nicks[nick].release();
       nick = newNick;
       nicks[nick].take();
-      return 0;
+      return true;
     } else {
-      //change this when adding nickname registration
-      return 1;
+      return false;
     }
   }
   void leave() {

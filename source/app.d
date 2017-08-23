@@ -31,7 +31,7 @@ void main() {
 
 		socketSet.add(listener);//Add the listener socket to the socket set so that we can process any updates from it.
 
-		foreach (client; clients) {
+		foreach (client; clients) { //process message queues
 			//go through each channel the client is part of then copy the channel message queue to the client
 			foreach (channel; client.channels) {
 				foreach (message; channels[channel].queue) {
@@ -46,6 +46,8 @@ void main() {
 			client.queue = [];
 			socketSet.add(client.conn); //add all connections to socketSet to be checked for status chages.
 		}
+
+		//process updates from our connection's sockets.
 		Socket.select(socketSet, null, null);  //get list of sockets that have changed status.
 		for (size_t i = 0; i < clients.length; i++) {
 			if (socketSet.isSet(clients[i].conn)) { //if socket being checked has a status update.
@@ -68,6 +70,7 @@ void main() {
 				}
 			}
 		}
+
 		if (socketSet.isSet(listener)) { //if there was a connection request.
 			Socket sn = null;
 			scope (failure) { //if client creation fails, run this.
@@ -92,7 +95,8 @@ void main() {
 		socketSet.reset();
 	}
 }
-void processReceived(char[512] buffer, long recLen, size_t index) {
+
+void processReceived(char[512] buffer, long recLen, size_t index) { //process a message from a client, requires arguments of the message buffer, the length of what was actually received and the index of the client in the client array.
 	writefln("Received %d bytes from %s: %s", recLen, clients[index].conn.remoteAddress().toString(), buffer[0.. recLen]);
 	if (buffer[recLen-1] == '\n') {
 		string[] messages = split(to!string(buffer[0.. recLen]), '\n');//first split message by the newline char from the message; a check is done above since it is required, and seperating it makes operating each message easier.
