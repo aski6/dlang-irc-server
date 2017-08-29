@@ -10,9 +10,6 @@ import config;
 import client;
 import channel;
 
-Channel[string] channels;
-Client[] clients;
-
 void main() {
 	writefln("This might be an irc server at some point");
 
@@ -96,6 +93,7 @@ void main() {
 	}
 }
 
+//This code is deprecated, and should soon br eplaced as a major part of the rewrite.
 void processReceived(char[512] buffer, long recLen, size_t index) { //process a message from a client, requires arguments of the message buffer, the length of what was actually received and the index of the client in the client array.
 	writefln("Received %d bytes from %s: %s", recLen, clients[index].conn.remoteAddress().toString(), buffer[0.. recLen]);
 	if (buffer[recLen-1] == '\n') {
@@ -108,23 +106,22 @@ void processReceived(char[512] buffer, long recLen, size_t index) { //process a 
 					if(message[0] == "NICK") {
 						string reqNick = message[1];
 						writefln("requested nick: %s", message[1]);
-						if (clients[index].setNick(reqNick) == 0) { //if nick command is sucess.
+						if (clients[index].setNick(reqNick)) { //if nick command is sucess.
 							writefln("Nick Set: %s", clients[index].nick);
 						} else {
 							clients[index].queue ~= "433\n";
 						}
 					} else if (message[0] == "USER") {
 						if(message.length >= 4) {
-							string realname = message[4.. message.length-1].join();
-							clients[index].setup(message[1], message[2], message[3], realname);
+							clients[index].setup(message[1], message[2], message[3]);
 							clients[index].queue ~= format("001 %s :Welcome to the Internet Relay Network %s!%s@%s\n", clients[index].nick, clients[index].nick, clients[index].user, clients[index].host);
 							clients[index].queue ~= format("002 %s :Your host is %s\n", clients[index].nick, clients[index].server);
 						} else {
 							clients[index].queue ~= "461\n";
 						}
 					} else if (message[0] == "JOIN") {clients[index].channels ~= message[1];
-						if (!checkChannelExistance(message[1])) {
-							channels[message[1]] = new Channel(message[1]);
+						if (!isChannel(message[1])) {
+							channels[message[1]] = new Channel();
 						}
 						clients[index].channels ~= message[1];
 						writefln("Joined Channel: %s", message[1]);

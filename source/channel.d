@@ -1,5 +1,7 @@
 import client;
 
+Channel[string] channels;
+
 class Channel {
 	string[] queue;
 	this() {
