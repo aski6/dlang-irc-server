@@ -1,4 +1,4 @@
-# ircServer
+# Dlang-irc-server
 This might be an irc server. Someday.
 
 ## Platforms, Dependancies and Requirements
