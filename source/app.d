@@ -93,9 +93,46 @@ void main() {
 	}
 }
 
+void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
+
+	writefln("Received %d bytes from %s: %s", recLen, clients[clientIndex].conn.remoteAddress().toString(), buffer[0.. recLen]);
+
+	if (buffer[recLen-1] == '\n') {
+		string[] messages = split(to!string(buffer[0.. recLen]), '\n'); //Split the received data into all the seperate message, messages will end with \n
+
+		for (int i=0; i < messages.length; i++) { //execute this code for each message.
+			messages[i] = removechars(messages[i], "\r"); //remove any \r characters from the message cuz compatability is a thing.
+
+			if (messages[i].length > 0) { //If there is any contents left in the messages after removing control characters.
+			
+				string[] message = split(messages[i], " "); //Split the message into it's individual components, sperated by spaces.
+				bool hasPrefix = false;
+				string prefix;
+			
+				if (buffer[0] == ':') { //If the message has a prefix, set the prefix status to true and set the prefix variable as supplied. Then remove the prefix from the message so that the same code can run if there is a prefix or not.
+					hasPrefix = true;
+					prefix = removechars(message[0], ":");
+					message.remove(0);	
+				} 
+
+				switch (message[0]) {
+					default:
+						break;
+					case "NICK":
+						writefln("Received Nick Message");
+						break;
+					case "QUIT":
+						writefln("Received Quit Message");
+						break;
+				}
+			}
+		}
+	}
+}
+
+
 //This code is deprecated, and should soon br eplaced as a major part of the rewrite.
 void processReceived(char[512] buffer, long recLen, size_t index) { //process a message from a client, requires arguments of the message buffer, the length of what was actually received and the index of the client in the client array.
-	writefln("Received %d bytes from %s: %s", recLen, clients[index].conn.remoteAddress().toString(), buffer[0.. recLen]);
 	if (buffer[recLen-1] == '\n') {
 		string[] messages = split(to!string(buffer[0.. recLen]), '\n');//first split message by the newline char from the message; a check is done above since it is required, and seperating it makes operating each message easier.
 		for (int i=0; i < messages.length; i++) {
