@@ -53,7 +53,7 @@ void main() {
 				if (recLen == Socket.ERROR) {
 					writefln("There was an error receiving from the socket. :(");
 				} else if (recLen != 0) {
-					processReceived(buffer, recLen, i);
+					processMessage(buffer, recLen, i);
 				} else {
 					try {
 						//try to state address of socket closing, may fail if connections[i] was closed due to an error.
