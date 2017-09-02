@@ -94,16 +94,14 @@ void main() {
 }
 
 void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
-
 	writefln("Received %d bytes from %s: %s", recLen, clients[clientIndex].conn.remoteAddress().toString(), buffer[0.. recLen]);
-
 	if (buffer[recLen-1] == '\n') {
 		string[] messages = split(to!string(buffer[0.. recLen]), '\n'); //Split the received data into all the seperate message, messages will end with \n
 
 		for (int i=0; i < messages.length; i++) { //execute this code for each message.
 			messages[i] = removechars(messages[i], "\r"); //remove any \r characters from the message cuz compatability is a thing.
 
-			if (messages[i].length > 0) { //If there is any contents left in the messages after removing control characters.
+			if (messages[i].length > 0) { //If there is any content left in the messages after removing control characters.
 			
 				string[] message = split(messages[i], " "); //Split the message into it's individual components, sperated by spaces.
 				bool hasPrefix = false;
@@ -118,11 +116,44 @@ void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
 				switch (message[0]) {
 					default:
 						break;
-					case "NICK":
-						writefln("Received Nick Message");
+
+						//The code to handle these messages should be moved to a dedicated function for each command, however it has been moved to the appropriate message case for a functional program while the command support is small.
+					case "USER":
+						if(message.length >= 4) { //002 message may not be required.
+							clients[clientIndex].setup(message[1], message[2], message[3]);
+							clients[clientIndex].queue ~= format("001 %s :Welcome to the Internet Relay Network %s!%s@%s\n", clients[clientIndex].nick, clients[clientIndex].nick, clients[clientIndex].user, clients[clientIndex].host);
+							clients[clientIndex].queue ~= format("002 %s :Your host is %s\n", clients[clientIndex].nick, clients[clientIndex].server);
+						} else {
+							clients[clientIndex].queue ~= "461\n";
+						}
 						break;
+
+					case "NICK":
+						string reqNick = message[1];
+						writefln("requested nick: %s", message[1]);
+						if (clients[clientIndex].setNick(reqNick)) { //if nick command is sucess.
+							writefln("Nick Set: %s", clients[clientIndex].nick);
+						} else {
+							clients[clientIndex].queue ~= "433\n";
+						}
+						break;
+
+					case "JOIN": //The way that channel support is implemented here needs to change, but this allows for quick testing of other features until full support for channels as defined in ___ is implemented.
+						if (!isChannel(message[1])) {
+							channels[message[1]] = new Channel();
+						}
+						clients[clientIndex].channels ~= message[1];
+						writefln("Joined Channel: %s", message[1]);
+						break;
+					
+					//Since these commands have either no support implemented, or a planned and implemented "no support", their code will just live in their appropriate case.
 					case "QUIT":
+						//No support added for this yet.
 						writefln("Received Quit Message");
+						break;
+
+					case "CAP": //this server does not support this command.
+						clients[clientIndex].queue ~= "421\n";
 						break;
 				}
 			}
