@@ -7,7 +7,7 @@ This might be an irc server. Someday.
 * It currently the code is only tested for compilation on GDC (testing on other compilers would be welcome. I use GDC since my target is small boards e.g. RPI, and GDC is easily available on these). Main development is usually on Debian 9 GNU/Linux, x86_64, with the same tools stated above.
 
 ## Aims
-This server will hopefully one day become a light, simple and easy to use/modify irc server, perfect for small communcation systems and small single board computers.
+This server will hopefully one day become (and inherit the description): A light, simple and easy to use/modify irc server, perfect for small communcation systems and single board computers.
 Features such as multiple servers are not planned for implementation, however the other IRC features that will be used daily in small private server will hopefully be implemented. Once the server is more complete and can actually perform the most basic parts of IRC, A list of planned, in progress and implemented features should be added to this document.
 
 ## Requirements
