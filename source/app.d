@@ -95,7 +95,7 @@ void main() {
 
 void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
 	writefln("Received %d bytes from %s: %s", recLen, clients[clientIndex].conn.remoteAddress().toString(), buffer[0.. recLen]);
-	if (buffer[recLen-1] == '\n') {
+	if (buffer[recLen-1] == '\n') { //If the message is valid. all valid messages end with \n.
 		string[] messages = split(to!string(buffer[0.. recLen]), '\n'); //Split the received data into all the seperate message, messages will end with \n
 
 		for (int i=0; i < messages.length; i++) { //execute this code for each message.
@@ -146,7 +146,11 @@ void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
 						writefln("Joined Channel: %s", message[1]);
 						break;
 					
-					//Since these commands have either no support implemented, or a planned and implemented "no support", their code will just live in their appropriate case.
+					//Since these commands have either no support implemented, a single, static reply on one line or a planned and implemented "no support", their code will just live in their appropriate case.
+					case "PING":
+						clients[clientIndex].queue ~= format("PONG %s\n", clients[clientIndex].server);
+						break;
+
 					case "QUIT":
 						//No support added for this yet.
 						writefln("Received Quit Message");
