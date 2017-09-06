@@ -8,6 +8,7 @@ Client[] clients;
 
 class Client {
   Socket conn;
+  bool active = false;
 
   string nick;
 

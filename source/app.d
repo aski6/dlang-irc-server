@@ -123,6 +123,7 @@ void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
 							clients[clientIndex].setup(message[1], message[2], message[3]);
 							clients[clientIndex].queue ~= format("001 %s :Welcome to the Internet Relay Network %s!%s@%s\n", clients[clientIndex].nick, clients[clientIndex].nick, clients[clientIndex].user, clients[clientIndex].host);
 							clients[clientIndex].queue ~= format("002 %s :Your host is %s\n", clients[clientIndex].nick, clients[clientIndex].server);
+							clients[clientIndex].active = true;
 						} else {
 							clients[clientIndex].queue ~= "461\n";
 						}
