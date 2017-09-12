@@ -139,7 +139,7 @@ void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
 						}
 						break;
 
-					case "JOIN": //The way that channel support is implemented here needs to change, but this allows for quick testing of other features until full support for channels as defined in ___ is implemented.
+					case "JOIN": //The way that channel support is implemented here needs to change, but this allows for quick testing of other features until full support for channels as defined in the irc standard is implemented.
 						if (!isChannel(message[1])) {
 							channels[message[1]] = new Channel();
 						}
