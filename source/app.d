@@ -146,15 +146,18 @@ void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
 						clients[clientIndex].channels ~= message[1];
 						writefln("Joined Channel: %s", message[1]);
 						break;
-					
+
+					case "PRIVMSG":
+						break;	
 					//Since these commands have either no support implemented, a single, static reply on one line or a planned and implemented "no support", their code will just live in their appropriate case.
 					case "PING":
 						clients[clientIndex].queue ~= format("PONG %s\n", clients[clientIndex].server);
 						break;
 
 					case "QUIT":
-						//No support added for this yet.
-						writefln("Received Quit Message");
+						writefln("Received quit message, releasing nickname and closing sockets");
+						clients[clientIndex].quit(to!int(clientIndex));
+						clients = clients.remove(clientIndex);
 						break;
 
 					case "CAP": //this server does not support this command.

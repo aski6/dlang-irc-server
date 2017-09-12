@@ -45,7 +45,11 @@ class Client {
   
   void quit(int clientsIndex) {
     nicks.remove(nick);
-    clients.remove(clientsIndex);
+    writefln("nick removed");
+    //conn.shutdown();
+    conn.close();
+    writefln("connection closed");
+    //clients.remove(clientsIndex);
   }
 }
 
