@@ -132,6 +132,10 @@ void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
 					case "NICK":
 						string reqNick = message[1];
 						writefln("requested nick: %s", message[1]);
+						if (reqNick.length > 9){
+							writefln("Nick must be less than 9 characters");
+							break;
+						}
 						if (clients[clientIndex].setNick(reqNick)) { //if nick command is sucess.
 							writefln("Nick Set: %s", clients[clientIndex].nick);
 						} else {
