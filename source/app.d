@@ -95,77 +95,96 @@ void main() {
 
 void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
 	writefln("Received %d bytes from %s: %s", recLen, clients[clientIndex].conn.remoteAddress().toString(), buffer[0.. recLen]);
-	if (buffer[recLen-1] == '\n') { //If the message is valid. all valid messages end with \n.
-		string[] messages = split(to!string(buffer[0.. recLen]), '\n'); //Split the received data into all the seperate message, messages will end with \n
 
-		for (int i=0; i < messages.length; i++) { //execute this code for each message.
-			messages[i] = removechars(messages[i], "\r"); //remove any \r characters from the message cuz compatability is a thing.
+	/*
+	   If the message is not valid, we can't process it so exit this function early.
+	   All valid messages will end with "\n".
+	*/
+	if (buffer[recLen-1] != '\n') { //If the message is valid. all valid messages end with \n.
+		return;
+	}
+	//Split the data into separate messages, which will each end with \n. \r characters present in some messages are also removed.
+	string[] messages = split(removechars(to!string(buffer[0.. recLen]), "\r"), '\n'); 
 
-			if (messages[i].length > 0) { //If there is any content left in the messages after removing control characters.
-			
-				string[] message = split(messages[i], " "); //Split the message into it's individual components, sperated by spaces.
-				bool hasPrefix = false;
-				string prefix;
-			
-				if (buffer[0] == ':') { //If the message has a prefix, set the prefix status to true and set the prefix variable as supplied. Then remove the prefix from the message so that the same code can run if there is a prefix or not.
-					hasPrefix = true;
-					prefix = removechars(message[0], ":");
-					message.remove(0);	
-				} 
+	for (int i=0; i < messages.length; i++) { //execute this code for each message.
+		//Move onto the next message if there is no data in this message.
+		if (messages[i].length < 1) {
+		       break;
+		}
+	
+		string[] message = split(messages[i], " "); //Split the message into separated arguments. These are always split by spaces.
+		bool hasPrefix = false;
+		string prefix;
+		/*
+		   If the message has a prefix, set the prefix status to true and put the prefix contents into the dedicated string.
+		   Then remove the prefix from the message so that the same code can be run with or without a prefix.
+		*/
+		if (buffer[0] == ':') {
+			hasPrefix = true;
+			prefix = removechars(message[0], ":");
+			message.remove(0);	
+		} 
 
-				switch (message[0]) {
-					default:
-						break;
+		switch (message[0]) {
+			default:
+				break;
 
-						//The code to handle these messages should be moved to a dedicated function for each command, however it has been moved to the appropriate message case for a functional program while the command support is small.
-					case "USER":
-						if(message.length >= 4) { //002 message may not be required.
-							clients[clientIndex].setup(message[1], message[2], message[3]);
-							clients[clientIndex].queue ~= format("001 %s :Welcome to the Internet Relay Network %s!%s@%s\n", clients[clientIndex].nick, clients[clientIndex].nick, clients[clientIndex].user, clients[clientIndex].host);
-							clients[clientIndex].queue ~= format("002 %s :Your host is %s\n", clients[clientIndex].nick, clients[clientIndex].server);
-							clients[clientIndex].active = true;
-						} else {
-							clients[clientIndex].queue ~= "461\n";
-						}
-						break;
-
-					case "NICK":
-						string reqNick = message[1];
-						writefln("requested nick: %s", message[1]);
-						if (clients[clientIndex].setNick(reqNick)) { //if nick command is sucess.
-							writefln("Nick Set: %s", clients[clientIndex].nick);
-						} else {
-							clients[clientIndex].queue ~= "433\n";
-						}
-						break;
-
-					case "JOIN": //The way that channel support is implemented here needs to change, but this allows for quick testing of other features until full support for channels as defined in the irc standard is implemented.
-						if (!isChannel(message[1])) {
-							channels[message[1]] = new Channel();
-						}
-						clients[clientIndex].channels ~= message[1];
-						writefln("Joined Channel: %s", message[1]);
-						break;
-
-					case "PRIVMSG":
-						break;	
-					//Since these commands have either no support implemented, a single, static reply on one line or a planned and implemented "no support", their code will just live in their appropriate case.
-					case "PING":
-						clients[clientIndex].queue ~= format("PONG %s\n", clients[clientIndex].server);
-						break;
-
-					case "QUIT":
-						writefln("Received quit message, releasing nickname and closing sockets");
-						clients[clientIndex].quit(to!int(clientIndex));
-						clients = clients.remove(clientIndex);
-						break;
-
-					case "CAP": //this server does not support this command.
-						clients[clientIndex].queue ~= "421\n";
-						break;
+			/*
+		   	The code to handle these messages should be moved into a dedicated function for each message.
+			However, for efficency this will be done when the required updates to these commands are implemented.
+			*/	   
+			case "USER":
+				if(message.length >= 4) { 
+					clients[clientIndex].setup(message[1], message[2], message[3]);
+					clients[clientIndex].queue ~= format("001 %s :Welcome to the Internet Relay Network %s!%s@%s\n", clients[clientIndex].nick, clients[clientIndex].nick, clients[clientIndex].user, clients[clientIndex].host);
+					//002 message may not be required.
+					clients[clientIndex].queue ~= format("002 %s :Your host is %s\n", clients[clientIndex].nick, clients[clientIndex].server);
+					clients[clientIndex].active = true;
+				} else {
+					clients[clientIndex].queue ~= "461\n";
 				}
-			}
+				break;
+
+			case "NICK":
+				string reqNick = message[1];
+				writefln("requested nick: %s", message[1]);
+				if (clients[clientIndex].setNick(reqNick)) { //if nick command is sucess.
+					writefln("Nick Set: %s", clients[clientIndex].nick);
+				} else {
+					clients[clientIndex].queue ~= "433\n";
+				}
+				break;
+			//This channel support is temporary, and is used to test other features.
+			case "JOIN": 
+				if (!isChannel(message[1])) {
+					channels[message[1]] = new Channel();
+				}
+				clients[clientIndex].channels ~= message[1];
+				writefln("Joined Channel: %s", message[1]);
+				break;
+
+			case "PRIVMSG":
+				privmsg(clientIndex, message[1], message[2.. message.length]);
+				break;	
+			//These commands have either have a direct reply/action, or a planned "no support" response.
+			case "PING":
+				clients[clientIndex].queue ~= format("PONG %s\n", clients[clientIndex].server);
+				break;
+
+			case "QUIT":
+				writefln("Received quit message, releasing nickname and closing sockets");
+				clients[clientIndex].quit(to!int(clientIndex));
+				clients = clients.remove(clientIndex);
+				break;
+
+			case "CAP": //this server does not support this command.
+				clients[clientIndex].queue ~= "421\n";
+				break;
 		}
 	}
 }
 
+//specific functions for running irc commands.
+void privmsg(size_t index, string target, string[] message) {
+	string[] targets = split(target, ",");
+}
