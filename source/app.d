@@ -1,6 +1,7 @@
 import std.stdio;
 import std.socket;
 import std.algorithm.mutation;
+import std.algorithm.comparison;
 import std.conv;
 import std.array;
 import std.format;
@@ -185,6 +186,13 @@ void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
 }
 
 //specific functions for running irc commands.
-void privmsg(size_t index, string target, string[] message) {
-	string[] targets = split(target, ",");
+void privmsg(size_t index, string targetList, string[] messageWords) {
+	string[] targets = split(targetList, ",");
+	string message = messageWords.join(" ");
+	foreach (target; targets) {
+		//If the target has a "#" or "&" at the start, it is a channel.
+		if (target.indexOfAny("#%") == 0) {
+			channels[target].queue ~= message;
+		}
+	}
 }
