@@ -44,6 +44,9 @@ void main() {
 			client.queue = [];
 			socketSet.add(client.conn); //add all connections to socketSet to be checked for status chages.
 		}
+		foreach (channel; channels) {
+			channel.queue = [];
+		}
 
 		//process updates from our connection's sockets.
 		Socket.select(socketSet, null, null);  //get list of sockets that have changed status.
