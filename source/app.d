@@ -131,7 +131,7 @@ void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
 				break;
 
 			/*
-		   	The code to handle these messages should be moved into a dedicated function for each message.
+		   	The code to handle these messages should perhaps be moved into a dedicated function for each message.
 			However, for efficency this will be done when the required updates to these commands are implemented.
 			*/	   
 			case "USER":
@@ -188,10 +188,11 @@ void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
 //specific functions for running irc commands.
 void privmsg(size_t index, string targetList, string[] messageWords) {
 	string[] targets = split(targetList, ",");
-	string message = messageWords.join(" ");
+	string messageText = messageWords.join(" ");
 	foreach (target; targets) {
 		//If the target has a "#" or "&" at the start, it is a channel.
 		if (target.indexOfAny("#%") == 0) {
+			string message = format(":%s PRIVMSG %s :%s", clients[index].nick, target, messageText);
 			channels[target].queue ~= message;
 		}
 	}
