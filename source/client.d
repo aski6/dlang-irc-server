@@ -12,24 +12,25 @@ class Client {
 
   string nick;
 
-  string user;
-  string host;
-  string server;
+  string username;
+  string hostname;
+  string servername;
+  string realName;
 
   string[] queue;
   string[] channels;
 
-  this(Socket connection, string nickname) {
+  this(Socket connection) {
 	conn = connection;
-	while (!setNick(nickname)) {
-	  nickname = format("%s%s", nickname, "_");
-	}
   }
 
-  void setup(string username, string hostname, string servername) {
-	user = username;
-	host = hostname;
-	server = servername;
+  void setup(string username, string hostname, string servername, string realname) {
+	this.username = username;
+	this.hostname = hostname;
+	this.servername = servername;
+	this.realName = realname;
+
+	active = true;
   }
 
   bool setNick(string newNick) { //Try to set the clients nickname to the supplied argument. Return a the status of setting the new nick.

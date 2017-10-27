@@ -85,7 +85,7 @@ void main() {
 			assert(listener.isAlive);
 			if (clients.length < MAX_CONNECTIONS) {
 				writefln("Connection from %s established.", sn.remoteAddress().toString());
-				clients ~= new Client(sn, ("Guest"~to!string(clients.length)));
+				clients ~= new Client(sn);
 			} else {
 				writefln("Rejected connection from %s: max connections already reached.", sn.remoteAddress().toString());
 				sn.close();
@@ -107,6 +107,8 @@ void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
 	if (buffer[recLen-1] != '\n') { //If the message is valid. all valid messages end with \n.
 		return;
 	}
+
+	Client client = clients[clientIndex];
 	//Split the data into separate messages, which will each end with \n. \r characters present in some messages are also removed.
 	string[] messages = split(removechars(to!string(buffer[0.. recLen]), "\r"), '\n'); 
 
@@ -138,21 +140,19 @@ void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
 			However, for efficency this will be done when the required updates to these commands are implemented.
 			*/	   
 			case "USER":
-				if(message.length >= 4) { 
-					clients[clientIndex].setup(message[1], message[2], message[3]);
-					clients[clientIndex].queue ~= format("001 %s :Welcome to the Internet Relay Network %s!%s@%s\n", clients[clientIndex].nick, clients[clientIndex].nick, clients[clientIndex].user, clients[clientIndex].host);
+				if(message.length >= 5) { 
+					clients[clientIndex].setup(message[1], message[2], message[3], removechars(message[4 .. $].join(" "), ":"));
+					clients[clientIndex].queue ~= format("001 %s :Welcome to the Internet Relay Network %s!%s@%s\n", clients[clientIndex].nick, clients[clientIndex].nick, clients[clientIndex].username, clients[clientIndex].hostname);
 					//002 message may not be required.
-					clients[clientIndex].queue ~= format("002 %s :Your host is %s\n", clients[clientIndex].nick, clients[clientIndex].server);
-					clients[clientIndex].active = true;
+					clients[clientIndex].queue ~= format("002 %s :Your host is %s\n", clients[clientIndex].nick, clients[clientIndex].servername);
 				} else {
 					clients[clientIndex].queue ~= "461\n";
 				}
 				break;
 
 			case "NICK":
-				string reqNick = message[1];
 				writefln("requested nick: %s", message[1]);
-				if (clients[clientIndex].setNick(reqNick)) { //if nick command is sucess.
+				if (clients[clientIndex].setNick(message[1])) { //if nick command is sucess.
 					writefln("Nick Set: %s", clients[clientIndex].nick);
 				} else {
 					clients[clientIndex].queue ~= "433\n";
@@ -172,7 +172,7 @@ void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
 				break;	
 			//These commands have either have a direct reply/action, or a planned "no support" response.
 			case "PING":
-				clients[clientIndex].queue ~= format("PONG %s\n", clients[clientIndex].server);
+				clients[clientIndex].queue ~= format("PONG %s\n", clients[clientIndex].servername);
 				break;
 
 			case "QUIT":
@@ -192,6 +192,7 @@ void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
 void privmsg(size_t index, string targetList, string[] messageWords) {
 	string[] targets = split(targetList, ",");
 	string messageText = messageWords.join(" ");
+	writefln("Message to send to %s: %s", targetList, messageText);
 	foreach (target; targets) {
 		//If the target has a "#" or "&" at the start, it is a channel.
 		if (target.indexOfAny("#%") == 0) {
