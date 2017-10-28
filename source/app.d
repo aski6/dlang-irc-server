@@ -152,8 +152,11 @@ void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
 
 			case "NICK":
 				writefln("requested nick: %s", message[1]);
+				prevNick = clients[clientIndex].nick;
 				if (clients[clientIndex].setNick(message[1])) { //if nick command is sucess.
 					writefln("Nick Set: %s", clients[clientIndex].nick);
+					//Possible solution to the client not appearing to know if their new nickname is accepted.
+					//clients[clientIndex].queue ~= format(":%s NICK %s", prevNick, message[1]);
 				} else {
 					clients[clientIndex].queue ~= "433\n";
 				}
@@ -196,7 +199,7 @@ void privmsg(size_t index, string targetList, string[] messageWords) {
 	foreach (target; targets) {
 		//If the target has a "#" or "&" at the start, it is a channel.
 		if (target.indexOfAny("#%") == 0) {
-			string message = format(":%s PRIVMSG %s :%s", clients[index].nick, target, messageText);
+			string message = format(":%s PRIVMSG %s %s\n", clients[index].nick, target, messageText);
 			channels[target].queue ~= message;
 		}
 	}
