@@ -6,6 +6,7 @@ import std.conv;
 import std.array;
 import std.format;
 import std.string;
+import std.regex;
 
 import config;
 import client;
@@ -33,7 +34,10 @@ void main() {
 			//go through each channel the client is part of then copy the channel message queue to the client
 			foreach (channel; client.channels) {
 				foreach (message; channels[channel].queue) {
-					client.queue ~= message;
+					string[] messageArgs = message.split(" ");
+					if (messageArgs[0] != format(":%s", client.nick) && messageArgs[1] == "PRIVMSG") {
+						client.queue ~= message;
+					}
 				}
 			}
 			//then send all messages in the client's message queue to the client.
@@ -110,7 +114,7 @@ void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
 
 	Client client = clients[clientIndex];
 	//Split the data into separate messages, which will each end with \n. \r characters present in some messages are also removed.
-	string[] messages = split(removechars(to!string(buffer[0.. recLen]), "\r"), '\n'); 
+	string[] messages = split(replaceAll(to!string(buffer[0.. recLen]), ctRegex!("^.*\r$"), ""), '\n'); 
 
 	for (int i=0; i < messages.length; i++) { //execute this code for each message.
 		//Move onto the next message if there is no data in this message.
