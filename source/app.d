@@ -152,11 +152,13 @@ void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
 
 			case "NICK":
 				writefln("requested nick: %s", message[1]);
-				prevNick = clients[clientIndex].nick;
+				string prevNick = clients[clientIndex].nick;
 				if (clients[clientIndex].setNick(message[1])) { //if nick command is sucess.
-					writefln("Nick Set: %s", clients[clientIndex].nick);
+					writefln("Nick Set: %s\n", clients[clientIndex].nick);
 					//Possible solution to the client not appearing to know if their new nickname is accepted.
-					//clients[clientIndex].queue ~= format(":%s NICK %s", prevNick, message[1]);
+					if (clients[clientIndex].active) {
+						clients[clientIndex].queue ~= format(":%s NICK %s\n", prevNick, message[1]);
+					}
 				} else {
 					clients[clientIndex].queue ~= "433\n";
 				}
