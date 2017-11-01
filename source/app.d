@@ -114,7 +114,7 @@ void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
 
 	Client client = clients[clientIndex];
 	//Split the data into separate messages, which will each end with \n. \r characters present in some messages are also removed.
-	string[] messages = split(replaceAll(to!string(buffer[0.. recLen]), ctRegex!("^.*\r$"), ""), '\n'); 
+	string[] messages = split(removechars(to!string(buffer[0.. recLen]), "\r"), '\n'); 
 
 	for (int i=0; i < messages.length; i++) { //execute this code for each message.
 		//Move onto the next message if there is no data in this message.
@@ -171,6 +171,7 @@ void processMessage(char[512] buffer, long recLen, size_t clientIndex) {
 			case "JOIN": 
 				if (!isChannel(message[1])) {
 					channels[message[1]] = new Channel();
+					writefln(format("Created Channel %s, Current channels are: %s", message[1], channels));
 				}
 				clients[clientIndex].channels ~= message[1];
 				writefln("Joined Channel: %s", message[1]);
@@ -206,6 +207,9 @@ void privmsg(size_t index, string targetList, string[] messageWords) {
 		//If the target has a "#" or "&" at the start, it is a channel.
 		if (target.indexOfAny("#%") == 0) {
 			string message = format(":%s PRIVMSG %s %s\n", clients[index].nick, target, messageText);
+			if (!isChannel(target)) {
+				writefln(format("%s is not a channel!", target));
+			}
 			channels[target].queue ~= message;
 		}
 	}
