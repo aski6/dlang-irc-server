@@ -25,7 +25,7 @@ void main() {
 	//start the program loop checking sockets.
 	writefln("Listening for incoming connections on address %s, port %d.\n", ADDR, PORT);
 
-	auto socketSet = new SocketSet(MAX_CONNECTIONS + 1); //create a socketset with enough slots for the mac number of connections. +1 leaves room for the listener socket. The socketset allows us to keep track of which sockets have updates that need processing
+	auto socketSet = new SocketSet(MAX_CONNECTIONS + 1); //create a socketset with enough slots for the max number of connections. +1 leaves room for the listener socket. The socketset allows us to keep track of which sockets have updates that need processing
 	while (true) {
 
 		socketSet.add(listener);//Add the listener socket to the socket set so that we can process any updates from it.
