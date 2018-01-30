@@ -1,9 +1,9 @@
 {
-	"copyright": "Copyright © 2017, aski6",
+	"copyright": "Copyright © 2017-2018, aski6",
 	"name": "ircserver",
 	"authors": [
 		"aski6"
 	],
-	"description": "An IRC Server. Possibly.",
-	"license": "GPL"
+	"description": "An IRC server. May even work one day.",
+	"license": "GPL-2.0+"
 }

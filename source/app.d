@@ -1,3 +1,20 @@
+/*
+Copyright (C) 2017-2018  aski6
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along
+with this program; if not, write to the Free Software Foundation, Inc.,
+51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+*/
 import std.stdio;
 import std.socket;
 import std.algorithm.mutation;
@@ -6,25 +23,29 @@ import std.conv;
 import std.array;
 import std.format;
 import std.string;
-import std.regex;
 
 import config;
 import client;
 import channel;
 
 void main() {
+	writefln("irc-server-dlang  Copyright (C) 2017-2018  aski6
+This program comes with ABSOLUTELY NO WARRANTY; for details see LICENCE.md.
+This is free software, and you are welcome to redistribute it
+under certain conditions; see LICENCE.md for details.");
+	writefln("");
 	writefln("This might be an irc server at some point");
 
 	//Receive data from sockets and setup incoming connections.
 	auto listener = new TcpSocket(); //Create a socket to listen for incoming connection requests.
-	assert(listener.isAlive); //listener must have the isAlive property true.
-	listener.blocking = false; //Make listener non-blocking since the program is not multi-threaded, and we want to do things while waiting for sockets to do stuff.
-	listener.bind(new InternetAddress(ADDR, PORT));
+	assert(listener.isAlive); //Listener must have the isAlive property true.
+	listener.blocking = false; //Make listener non-blocking since the program is not multi-threaded.
+	listener.bind(new InternetAddress(ADDR, PORT)); //Bind to the address and port specified in config.d.
 	listener.listen(1);
 
-	//start the program loop checking sockets.
 	writefln("Listening for incoming connections on address %s, port %d.\n", ADDR, PORT);
 
+	//start the program loop checking sockets.
 	auto socketSet = new SocketSet(MAX_CONNECTIONS + 1); //create a socketset with enough slots for the max number of connections. +1 leaves room for the listener socket. The socketset allows us to keep track of which sockets have updates that need processing
 	while (true) {
 
